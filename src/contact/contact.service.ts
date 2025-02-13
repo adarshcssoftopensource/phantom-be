@@ -28,7 +28,7 @@ export class ContactsService {
       return plainToInstance(CreateContactDto, newContact.toObject());
     } catch (error) {
       throw new BadRequestException(
-        `Failed to fetch contacts: ${error.message}`,
+        `Failed to add contact: ${error.message}`,
       );
     }
   }

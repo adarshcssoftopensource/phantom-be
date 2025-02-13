@@ -26,6 +26,7 @@ export class AuthService {
 
       // Check if user already exists
       const existingUser = await this.userModel.findOne({ email }).exec();
+
       if (existingUser) {
         throw new BadRequestException('User with this email already exists');
       }
@@ -39,6 +40,7 @@ export class AuthService {
         name,
         password: hashedPassword,
       });
+
       await user.save();
       const token = this.jwtService.sign(
         { id: user._id, email: user.email },
@@ -46,7 +48,6 @@ export class AuthService {
       );
 
       return {
-        message: 'User registered successfully',
         token,
         expiresIn: '1 hour',
       };
@@ -78,19 +79,21 @@ export class AuthService {
       );
 
       return {
-        message: 'User logged in successfully',
         token,
         expiresIn: '1 hour',
       };
     } catch (error) {
       console.error('Error in login:', error);
-      throw new InternalServerErrorException('Failed to login');
+      throw error;
     }
   }
 
   async profile(userId: string) {
     try {
-      const user = await this.userModel.findById(userId).select('-password');
+      const user = await this.userModel
+        .findById(userId)
+        .select('-password')
+        .lean();
       if (!user) throw new NotFoundException('User not found');
 
       return user;

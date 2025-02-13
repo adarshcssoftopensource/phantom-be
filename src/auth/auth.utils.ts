@@ -9,7 +9,6 @@ export class AuthCrypto {
     password: string,
     hashedPassword: string,
   ): Promise<boolean> {
-    const isMatched = await argon2.verify(hashedPassword, password);
-    return isMatched;
+    return await argon2.verify(hashedPassword, password);
   }
 }

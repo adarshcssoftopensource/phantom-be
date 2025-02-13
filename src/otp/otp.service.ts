@@ -1,7 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ConfigService } from '@nestjs/config';
 import { generateOtp } from 'src/utils/otp-generate';
 import { OTP } from './schema/otp.schema';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -11,18 +10,19 @@ export class OtpService {
   constructor(
     @InjectModel(OTP.name) private otpModel: Model<OTP>,
     private readonly mailService: MailerService,
-    private configService: ConfigService,
   ) {}
 
   async sendOtp(email: string): Promise<{ message: string }> {
     const otp = generateOtp();
 
     // Store OTP in the database with expiration
-    await this.otpModel.findOneAndUpdate(
-      { email },
-      { otp, expiresAt: new Date(Date.now() + 5 * 60000) }, // Expiry: 5 minutes
-      { upsert: true, new: true },
-    );
+    await this.otpModel
+      .findOneAndUpdate(
+        { email },
+        { otp, expiresAt: new Date(Date.now() + 5 * 60000) }, // Expiry: 5 minutes
+        { upsert: true, new: true },
+      )
+      .lean();
 
     // Send OTP via email
     const mailOptions = {
@@ -44,7 +44,7 @@ export class OtpService {
   async verifyOtp(
     email: string,
     enteredOtp: string,
-  ): Promise<{ message: string; success: boolean }> {
+  ): Promise<{ message: string }> {
     const otpRecord = await this.otpModel.findOne({ email });
 
     if (!otpRecord) {
@@ -62,6 +62,6 @@ export class OtpService {
     // If OTP is valid, remove it from DB
     await this.otpModel.deleteOne({ email });
 
-    return { success: true, message: 'OTP verified successfully!' };
+    return { message: 'OTP verified successfully!' };
   }
 }
