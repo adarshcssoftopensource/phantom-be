@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './schema/user.model';
 import { AuthCrypto } from './auth.utils';
 import { CreateAuthDto, CreateLoginDto } from './dto/create-auth.dto';
+import { UpdateAuthDto } from './dto/update-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +19,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
     private authCrypto: AuthCrypto,
-  ) {}
+  ) { }
 
   async signUp(signUpDto: CreateAuthDto) {
     try {
@@ -69,6 +70,8 @@ export class AuthService {
         password,
         user.password,
       );
+      user.status = 'active';
+      await user.save();
 
       if (!isMatch)
         throw new UnauthorizedException('Invalid email or password');
@@ -88,7 +91,7 @@ export class AuthService {
     }
   }
 
-  async profile(userId: string) {
+  async profiles(userId: string) {
     try {
       const user = await this.userModel
         .findById(userId)
@@ -102,4 +105,74 @@ export class AuthService {
       throw new InternalServerErrorException('Failed to retrieve profile');
     }
   }
+
+  async getAllUsers() {
+    try {
+      // Get all users from the database excluding passwords
+      const users = await this.userModel.find().select('-password').lean().exec();
+      if (!users || users.length === 0) {
+        throw new NotFoundException('No users found');
+      }
+
+      return users;
+    } catch (error) {
+      console.error('Error in getAllUsers:', error);
+      throw new InternalServerErrorException('Failed to retrieve users');
+    }
+  }
+
+
+  async updateUser(userId: string, updateAuthDto: UpdateAuthDto) {
+    try {
+      const { name, email, password } = updateAuthDto;
+      // Find the user
+      const user = await this.userModel.findById(userId).exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // If the email is being updated, check if it's already in use
+      if (email && email !== user.email) {
+        const existingUser = await this.userModel.findOne({ email }).exec();
+        if (existingUser) {
+          throw new BadRequestException('Email is already in use');
+        }
+      }
+      // Hash new password if provided
+      if (password) {
+        user.password = await this.authCrypto.hashPassword(password);
+      }
+      // Update user details
+      user.name = name || user.name;
+      user.email = email || user.email;
+
+      await user.save();
+
+      return {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      };
+    } catch (error) {
+      console.error('Error in updateUser:', error);
+      throw new InternalServerErrorException('Failed to update user');
+    }
+  }
+
+  async deleteUser(userId: string) {
+    try {
+      const user = await this.userModel.findById(userId).exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Delete the user
+      await this.userModel.findByIdAndDelete(userId);
+
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      throw new InternalServerErrorException('Failed to delete user');
+    }
+  }
+
 }

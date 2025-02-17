@@ -12,7 +12,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+    ConfigModule.forRoot({ load: [configuration], isGlobal: true, envFilePath: '.env', }),
     MongooseModule.forRoot(process.env.MONGO_URL_PROD!),
     AuthModule,
     ContactsModule,
@@ -36,4 +36,4 @@ import { MailerModule } from '@nestjs-modules/mailer';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
