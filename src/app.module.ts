@@ -9,6 +9,8 @@ import configuration from './common/configuration';
 import { MessagingModule } from './messaging/messaging.module';
 import { OtpModule } from './otp/otp.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { UserModule } from './user/user.module';
+import { OverviewModule } from './overview/overview.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
         },
       }),
     }),
+    UserModule,
+    OverviewModule,
   ],
   controllers: [AppController],
   providers: [AppService],

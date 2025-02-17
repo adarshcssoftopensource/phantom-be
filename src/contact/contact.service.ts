@@ -27,9 +27,7 @@ export class ContactsService {
       const newContact = await new this.contactModel(dto).save();
       return plainToInstance(CreateContactDto, newContact.toObject());
     } catch (error) {
-      throw new BadRequestException(
-        `Failed to add contact: ${error.message}`,
-      );
+      throw new BadRequestException(`Failed to add contact: ${error.message}`);
     }
   }
 

@@ -1,6 +1,5 @@
 import {
   Injectable,
-  NotFoundException,
   UnauthorizedException,
   BadRequestException,
   InternalServerErrorException,
@@ -8,9 +7,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from './schema/user.model';
 import { AuthCrypto } from './auth.utils';
 import { CreateAuthDto, CreateLoginDto } from './dto/create-auth.dto';
+import { User, UserDocument } from 'src/user/schema/user.model';
 
 @Injectable()
 export class AuthService {
@@ -78,6 +77,11 @@ export class AuthService {
         { expiresIn: '1h' }, // Token expires in 1 hour
       );
 
+      await this.userModel.updateOne(
+        { email },
+        { $set: { lastActive: new Date() } },
+      );
+
       return {
         token,
         expiresIn: '1 hour',
@@ -85,21 +89,6 @@ export class AuthService {
     } catch (error) {
       console.error('Error in login:', error);
       throw error;
-    }
-  }
-
-  async profile(userId: string) {
-    try {
-      const user = await this.userModel
-        .findById(userId)
-        .select('-password')
-        .lean();
-      if (!user) throw new NotFoundException('User not found');
-
-      return user;
-    } catch (error) {
-      console.error('Error while getting profile:', error);
-      throw new InternalServerErrorException('Failed to retrieve profile');
     }
   }
 }
