@@ -1,3 +1,4 @@
+import { MONTH_NAMES } from '@common/constants';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -15,6 +16,7 @@ export class OverviewService {
     const restrictedUsers = await this.userModel.countDocuments({
       status: false,
     });
+    console.log(restrictedUsers);
 
     const recentSignups = await this.userModel
       .find()
@@ -22,6 +24,10 @@ export class OverviewService {
       .limit(3)
       .select('-password');
 
+    // Get current year
+    const currentYear = new Date().getFullYear();
+
+    // Aggregate monthly user activity
     const monthlyActivity = await this.userModel.aggregate([
       {
         $group: {
@@ -34,9 +40,14 @@ export class OverviewService {
             $sum: {
               $cond: [
                 {
-                  $gte: [
-                    '$lastActive',
-                    new Date(new Date().setHours(0, 0, 0, 0)),
+                  $and: [
+                    {
+                      $gte: [
+                        '$lastActive',
+                        new Date(new Date().setHours(0, 0, 0, 0)),
+                      ],
+                    }, // Active today
+                    { $eq: ['$status', true] }, // Status is true
                   ],
                 },
                 1,
@@ -48,6 +59,27 @@ export class OverviewService {
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
+
+    // Define all months for a full year
+    const allMonths = Array.from({ length: 12 }, (_, index) => ({
+      month: MONTH_NAMES[index], // Use full month name
+      totalUsers: 0,
+      activeUsers: 0,
+    }));
+
+    // Fill missing months with zero data
+    const userActivity = allMonths.map((monthData, index) => {
+      const found = monthlyActivity.find(
+        (data) => data._id.year === currentYear && data._id.month === index + 1,
+      );
+      return found
+        ? {
+            month: monthData.month, // Keep full month name
+            totalUsers: found.totalUsers,
+            activeUsers: found.activeUsers,
+          }
+        : monthData;
+    });
 
     return {
       stats: [
@@ -77,12 +109,7 @@ export class OverviewService {
         },
       ],
       recentSignups,
-
-      userActivity: monthlyActivity.map((data) => ({
-        month: `${data?._id.year}-${data._id.month?.toString().padStart(2, '0')}`, // Format: YYYY-MM
-        totalUsers: data?.totalUsers,
-        activeUsers: data?.activeUsers,
-      })),
+      userActivity,
     };
   }
 }

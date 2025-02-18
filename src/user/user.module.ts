@@ -13,5 +13,8 @@ import { AuthCrypto } from 'src/auth/auth.utils';
   ],
   controllers: [UserController],
   providers: [UserService, AuthCrypto],
+  exports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+  ],
 })
 export class UserModule {}

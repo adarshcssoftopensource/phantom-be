@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  UseGuards,
   Req,
   HttpCode,
   Put,
@@ -11,12 +10,12 @@ import {
   Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { ResponseMessage } from '@common/decorators/response.message';
+import { ResponseMessage } from '@common/decorators/response.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Roles } from '@common/decorators/roles.decorator';
+import { ROLE } from './user.role.enum';
 
 @Controller('user')
-@UseGuards(JwtAuthGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -57,6 +56,7 @@ export class UserController {
   }
 
   @Get('profile')
+  @Roles([ROLE.Admin, ROLE.Developer])
   getProfile(@Req() req) {
     return this.userService.profile(req.user.id);
   }

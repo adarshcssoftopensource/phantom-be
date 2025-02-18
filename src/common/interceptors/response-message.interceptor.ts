@@ -10,7 +10,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { format } from 'date-fns';
 import { Reflector } from '@nestjs/core';
-import { RESPONSE_MESSAGE_KEY } from '@common/decorators/response.message';
+import { RESPONSE_MESSAGE_KEY } from '@common/decorators/response.decorator';
 
 export type Response<T> = {
   status: boolean;

@@ -58,10 +58,6 @@ export class ContactsService {
       const skip = (pageNum - 1) * limitNum;
       const total = await this.contactModel.countDocuments();
 
-      if (total === 0) {
-        throw new NotFoundException('No contacts found');
-      }
-
       const contacts = await this.contactModel
         .find()
         .skip(skip)

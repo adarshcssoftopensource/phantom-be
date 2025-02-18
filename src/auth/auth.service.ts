@@ -2,7 +2,6 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,7 +20,7 @@ export class AuthService {
 
   async signUp(signUpDto: CreateAuthDto) {
     try {
-      const { email, name, password } = signUpDto;
+      const { email, password } = signUpDto;
 
       // Check if user already exists
       const existingUser = await this.userModel.findOne({ email }).exec();
@@ -35,14 +34,13 @@ export class AuthService {
 
       // Save User
       const user = new this.userModel({
-        email,
-        name,
+        ...signUpDto,
         password: hashedPassword,
       });
 
       await user.save();
       const token = this.jwtService.sign(
-        { id: user._id, email: user.email },
+        { id: user._id, email: user.email, role: user.role },
         { expiresIn: '1h' }, // Token expires in 1 hour
       );
 
@@ -52,7 +50,7 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Error in signUp:', error);
-      throw new InternalServerErrorException('Failed to register user');
+      throw error;
     }
   }
 
@@ -73,7 +71,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
 
       const token = this.jwtService.sign(
-        { id: user._id, email: user.email },
+        { id: user._id, email, role: user.role },
         { expiresIn: '1h' }, // Token expires in 1 hour
       );
 
