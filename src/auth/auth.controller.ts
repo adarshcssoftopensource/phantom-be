@@ -1,22 +1,11 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  UseGuards,
-  Req,
-  HttpCode,
-  Put,
-  Delete,
-  Param,
-} from '@nestjs/common';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto, CreateLoginDto } from './dto/create-auth.dto';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { ResponseMessage } from 'src/common/decorators/response.message';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { ResponseMessage } from '@common/decorators/response.decorator';
+import { Public } from '@common/decorators/public.decorator';
 
 @Controller('auth')
+@Public()
 export class AuthController {
   constructor(private authService: AuthService) { }
 
@@ -32,36 +21,4 @@ export class AuthController {
   async login(@Body() loginDto: CreateLoginDto) {
     return this.authService.login(loginDto);
   }
-
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  getProfile(@Req() req) {
-    return this.authService.profiles(req.user.id);
-  }
-
-  @HttpCode(200)
-  @Get('users')
-  async getAllUsers() {
-    return this.authService.getAllUsers();
-  }
-
-  @ResponseMessage('User updated successfully')
-  @HttpCode(200)
-  @Put('update/:id')
-  async updateUser(
-    @Param('id') userId: string,
-    @Body() updateAuthDto: UpdateAuthDto,
-  ) {
-    return this.authService.updateUser(userId, updateAuthDto);
-  }
-
-  @ResponseMessage('User deleted successfully')
-  @HttpCode(200)
-  @Delete('delete/:id')
-  async deleteUser(@Param('id') userId: string) {
-    return this.authService.deleteUser(userId);
-  }
-
-
-
 }

@@ -15,7 +15,7 @@ import { UpdateContactDto } from './dto/update-contact.dto';
 export class ContactsService {
   constructor(
     @InjectModel(Contact.name) private contactModel: Model<ContactDocument>,
-  ) {}
+  ) { }
 
   async createContact(dto: CreateContactDto) {
     try {
@@ -27,9 +27,7 @@ export class ContactsService {
       const newContact = await new this.contactModel(dto).save();
       return plainToInstance(CreateContactDto, newContact.toObject());
     } catch (error) {
-      throw new BadRequestException(
-        `Failed to add contact: ${error.message}`,
-      );
+      throw new BadRequestException(`Failed to add contact: ${error.message}`);
     }
   }
 
@@ -37,6 +35,9 @@ export class ContactsService {
     page?: number,
     limit?: number,
     all?: boolean,
+    search?: string,
+    sortField?: string,
+    sortOrder?: 'asc' | 'desc',
   ): Promise<{
     data: CreateContactDto[];
     total: number;
@@ -58,14 +59,26 @@ export class ContactsService {
       const limitNum = limit && !isNaN(limit) ? limit : 10;
 
       const skip = (pageNum - 1) * limitNum;
-      const total = await this.contactModel.countDocuments();
 
-      if (total === 0) {
-        throw new NotFoundException('No contacts found');
+      const filter: any = {};
+      if (search) {
+        filter.$or = [
+          { firstName: new RegExp(search, 'i') },
+          { lastName: new RegExp(search, 'i') },
+          { email: new RegExp(search, 'i') },
+          { phoneNumber: new RegExp(search, 'i') },
+        ];
       }
 
+      const sort: any = {};
+      if (sortField) {
+        sort[sortField] = sortOrder === 'desc' ? -1 : 1;
+      }
+      const total = await this.contactModel.countDocuments(filter);
+
       const contacts = await this.contactModel
-        .find()
+        .find(filter)
+        .sort(sort)
         .skip(skip)
         .limit(limitNum)
         .lean();
@@ -97,6 +110,34 @@ export class ContactsService {
     return contact;
   }
 
+  // async uploadContacts(file: Express.Multer.File) {
+  //   try {
+  //     if (!file) {
+  //       throw new BadRequestException('No file uploaded');
+  //     }
+
+  //     // Parse CSV file
+  //     const contacts: CreateContactDto[] = await parseCsvFile(file);
+
+  //     if (!contacts.length) {
+  //       throw new BadRequestException('CSV file is empty or invalid');
+  //     }
+
+  //     const emails = contacts.map((contact) => contact.email);
+  //     const phoneNumbers = contacts.map((contact) => contact.phoneNumber);
+
+  //     const existingContacts = await this.contactModel.find({
+  //       $or: [{ email: { $in: emails } }, { phoneNumber: { $in: phoneNumbers } }],
+  //     });
+
+  //     return await this.contactModel.insertMany(contacts);
+  //   } catch (error) {
+  //     throw new BadRequestException(
+  //       `Failed to upload contacts: ${error.message}`,
+  //     );
+  //   }
+  // }
+
   async uploadContacts(file: Express.Multer.File) {
     try {
       if (!file) {
@@ -110,13 +151,51 @@ export class ContactsService {
         throw new BadRequestException('CSV file is empty or invalid');
       }
 
-      return await this.contactModel.insertMany(contacts);
+      // Extract emails and phoneNumbers from the parsed contacts
+      const emails = contacts.map((contact) => contact.email);
+      const phoneNumbers = contacts.map((contact) => contact.phoneNumber);
+
+      // Find existing contacts in the database
+      const existingContacts = await this.contactModel.find({
+        $or: [{ email: { $in: emails } }, { phoneNumber: { $in: phoneNumbers } }],
+      });
+
+      if (existingContacts.length > 0) {
+        // Separate duplicate emails and phoneNumbers into distinct arrays
+        const duplicateEmails = existingContacts
+          .map((contact) => contact.email)
+          .filter((email) => email);
+
+        const duplicatePhoneNumbers = existingContacts
+          .map((contact) => contact.phoneNumber)
+          .filter((phoneNumber) => phoneNumber);
+
+        throw new BadRequestException({
+          message: 'Duplicate contacts found. Please remove them or then reupload.',
+          duplicateEmails,
+          duplicatePhoneNumbers,
+        });
+      }
+
+      // If no duplicates, insert the contacts
+      await this.contactModel.insertMany(contacts);
+
+      return {
+        status: true,
+        message: 'All contacts uploaded successfully',
+        insertedCount: contacts.length,
+      };
     } catch (error) {
-      throw new BadRequestException(
-        `Failed to upload contacts: ${error.message}`,
-      );
+      throw new BadRequestException({
+        message: error.message || 'Failed to upload contacts',
+        error: 'Bad Request',
+        statusCode: 400,
+        duplicateEmails: error.response?.duplicateEmails || [],
+        duplicatePhoneNumbers: error.response?.duplicatePhoneNumbers || [],
+      });
     }
   }
+
 
   async updateContact(id: string, dto: UpdateContactDto) {
     try {

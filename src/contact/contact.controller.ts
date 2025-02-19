@@ -20,7 +20,7 @@ import { UpdateContactDto } from './dto/update-contact.dto';
 
 @Controller('contacts')
 export class ContactsController {
-  constructor(private contactsService: ContactsService) {}
+  constructor(private contactsService: ContactsService) { }
 
   @Post()
   async create(@Body() dto: CreateContactDto) {
@@ -32,11 +32,17 @@ export class ContactsController {
     @Query('all') all?: boolean,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('sortField') sortField?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
     return this.contactsService.getAllContacts(
       page ? Number(page) : undefined,
       limit ? Number(limit) : undefined,
       all,
+      search,
+      sortField,
+      sortOrder,
     );
   }
 

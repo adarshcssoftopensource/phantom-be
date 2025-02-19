@@ -16,6 +16,12 @@ export class User {
 
   @Prop({ required: true, default: 'active' })
   status: string;
+
+  @Prop({ required: true })
+  consent: boolean;
+
+  @Prop({ required: true })
+  termsAgreement: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
