@@ -40,8 +40,7 @@ export class MessagingService {
     messageDto: CreateMessagingDto;
     userId: string;
   }) {
-    const { to, title, message } = messageDto;
-    console.log(to);
+    const { to, message } = messageDto;
 
     try {
       const sender = await this.userModel
@@ -60,7 +59,6 @@ export class MessagingService {
       console.log(recevier.phoneNumber);
 
       const response = await this.send({
-        title,
         to: recevier.phoneNumber,
         message,
       });
@@ -78,7 +76,6 @@ export class MessagingService {
       const newMessage = new this.messageModel({
         sender: sender._id,
         receiver: recevier._id,
-        title,
         content: message,
       });
 
@@ -100,19 +97,18 @@ export class MessagingService {
     bulkMessageDto: BulkMessagingDto;
     userId: string;
   }) {
-    const { numbers, title, message } = bulkMessageDto;
+    const { numbers, message } = bulkMessageDto;
     const results: any[] = [];
     const messagesToSave: any[] = [];
 
     for (const number of numbers) {
       try {
-        const response = await this.send({ to: number, title, message });
+        const response = await this.send({ to: number, message });
 
         // Save message only if successfully sent
         const newMessage = new this.messageModel({
           sender: userId, // No specific sender, so setting it as null
           receiver: number,
-          title,
           content: message,
         });
 
@@ -131,12 +127,11 @@ export class MessagingService {
     return { message: 'Bulk messages processed', results };
   }
 
-  private async send({ to, title, message }) {
+  private async send({ to, message }) {
     try {
       const response = await this.telnyxClient.messages.create({
         from: this.fromNumber,
         to,
-        subject: title,
         text: message,
         use_profile_webhooks: false,
         auto_detect: true,

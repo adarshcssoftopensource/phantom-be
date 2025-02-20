@@ -11,6 +11,7 @@ import {
   Param,
   Put,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -23,12 +24,14 @@ export class ContactsController {
   constructor(private contactsService: ContactsService) {}
 
   @Post()
-  async create(@Body() dto: CreateContactDto) {
-    return this.contactsService.createContact(dto);
+  async create(@Req() req, @Body() dto: CreateContactDto) {
+    const userId = req.user.id;
+    return this.contactsService.createContact(dto, userId);
   }
 
   @Get()
   async getAll(
+    @Req() req,
     @Query('all') all?: boolean,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -36,7 +39,9 @@ export class ContactsController {
     @Query('sortField') sortField?: string,
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
+    const userId = req.user.id;
     return this.contactsService.getAllContacts(
+      userId,
       page ? Number(page) : undefined,
       limit ? Number(limit) : undefined,
       all,
@@ -54,6 +59,7 @@ export class ContactsController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
+    @Req() req,
     @UploadedFile(
       new ParseFilePipe({
         validators: [new FileTypeValidator({ fileType: 'text/csv' })],
@@ -61,7 +67,8 @@ export class ContactsController {
     )
     file: Express.Multer.File,
   ) {
-    return this.contactsService.uploadContacts(file);
+    const userId = req.user.id;
+    return this.contactsService.uploadContacts(file, userId);
   }
 
   @Put(':id')

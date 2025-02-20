@@ -13,9 +13,6 @@ export class Message {
   receiver: Types.ObjectId;
 
   @Prop({ type: String, required: true })
-  title: string;
-
-  @Prop({ type: String, required: true })
   content: string;
 }
 

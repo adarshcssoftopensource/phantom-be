@@ -25,25 +25,36 @@ export class UserController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
+    @Query('sortField') sortField?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
     return this.userService.getAllUsers(
       page ? Number(page) : undefined,
       limit ? Number(limit) : undefined,
       search,
+      sortField,
+      sortOrder,
     );
   }
 
   @HttpCode(200)
   @Get('sub-users')
   async getSubUsers(
+    @Req() req,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
+    @Query('sortField') sortField?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
+    const userId = req.user.id;
     return this.userService.getAllSubUsers(
+      userId,
       page ? Number(page) : undefined,
       limit ? Number(limit) : undefined,
       search,
+      sortField,
+      sortOrder,
     );
   }
 

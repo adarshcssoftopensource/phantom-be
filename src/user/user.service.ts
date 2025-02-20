@@ -24,6 +24,8 @@ export class UserService {
     page?: number,
     limit?: number,
     search?: string,
+    sortField?: string,
+    sortOrder?: 'asc' | 'desc',
   ): Promise<{
     data: CreateUserDto[];
     total: number;
@@ -50,6 +52,11 @@ export class UserService {
         role: { $eq: ROLE.User },
       });
 
+      const sort: any = {};
+      if (sortField) {
+        sort[sortField] = sortOrder === 'desc' ? -1 : 1;
+      }
+
       if (total === 0) {
         return {
           data: [],
@@ -59,9 +66,10 @@ export class UserService {
         };
       }
 
-      // Get users based on search query, page, and limit
+      // Get users based on search query, page,sorting, and limit
       const users = await this.userModel
         .find({ ...searchQuery, role: ROLE.User })
+        .sort(sort)
         .select('-password')
         .skip(skip)
         .limit(limitNum)
@@ -80,9 +88,12 @@ export class UserService {
   }
 
   async getAllSubUsers(
+    userId: string,
     page?: number,
     limit?: number,
     search?: string,
+    sortField?: string,
+    sortOrder?: 'asc' | 'desc',
   ): Promise<{
     data: CreateUserDto[];
     total: number;
@@ -107,7 +118,13 @@ export class UserService {
       const total = await this.userModel.countDocuments({
         ...searchQuery,
         role: { $ne: ROLE.User },
+        _id: { $ne: userId },
       });
+
+      const sort: any = {};
+      if (sortField) {
+        sort[sortField] = sortOrder === 'desc' ? -1 : 1;
+      }
 
       if (total === 0) {
         return {
@@ -120,7 +137,12 @@ export class UserService {
 
       // Get users based on search query, page, and limit
       const users = await this.userModel
-        .find({ ...searchQuery, role: { $ne: ROLE.User } })
+        .find({
+          ...searchQuery,
+          role: { $ne: ROLE.User },
+          _id: { $ne: userId },
+        })
+        .sort(sort)
         .select('-password')
         .skip(skip)
         .limit(limitNum)
@@ -193,6 +215,7 @@ export class UserService {
       const {
         name,
         email,
+        role,
         password,
         status,
         permissionLevel,
@@ -221,6 +244,7 @@ export class UserService {
       if (accountType) updateFields.accountType = accountType;
       if (businessName) updateFields.businessName = businessName;
       if (status !== undefined) updateFields.status = status;
+      if (role !== undefined) updateFields.role = role;
       if (password) {
         updateFields.password = await this.authCrypto.hashPassword(password);
       }
