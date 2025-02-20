@@ -16,7 +16,6 @@ export class OverviewService {
     const restrictedUsers = await this.userModel.countDocuments({
       status: false,
     });
-    console.log(restrictedUsers);
 
     const recentSignups = await this.userModel
       .find()

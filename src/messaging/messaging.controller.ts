@@ -1,17 +1,21 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
+import { CreateMessagingDto } from './dto/create-messaging.dto';
+import { BulkMessagingDto } from './dto/bulk-messaging.dto';
 
 @Controller('messaging')
 export class MessagingController {
   constructor(private readonly messagingService: MessagingService) {}
 
   @Post('send')
-  async sendMessage(@Body() body: { to: string; message: string }) {
-    return this.messagingService.sendMessage(body.to, body.message);
+  async sendMessage(@Body() messageDto: CreateMessagingDto, @Req() req) {
+    const userId = req.user.id;
+    return this.messagingService.sendMessage({ messageDto, userId });
   }
 
-  @Post('send-campaign')
-  async sendCampaign(@Body() body: { numbers: string[]; message: string }) {
-    return this.messagingService.sendCampaign(body.numbers, body.message);
+  @Post('send-bulk')
+  async sendBulkMessage(@Body() bulkMessageDto: BulkMessagingDto, @Req() req) {
+    const userId = req.user.id;
+    return this.messagingService.sendCampaign({ bulkMessageDto, userId });
   }
 }

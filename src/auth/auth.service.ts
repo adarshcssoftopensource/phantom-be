@@ -20,13 +20,17 @@ export class AuthService {
 
   async signUp(signUpDto: CreateAuthDto) {
     try {
-      const { email, password } = signUpDto;
+      const { email, password, consent, termsAgreement } = signUpDto;
 
       // Check if user already exists
       const existingUser = await this.userModel.findOne({ email }).exec();
 
       if (existingUser) {
         throw new BadRequestException('User with this email already exists');
+      }
+
+      if (!termsAgreement || !consent) {
+        throw new BadRequestException('You must accept the Terms of Service');
       }
 
       // Hash Password
@@ -69,6 +73,12 @@ export class AuthService {
 
       if (!isMatch)
         throw new UnauthorizedException('Invalid email or password');
+
+      if (!user.status) {
+        throw new BadRequestException(
+          'User is not active please contact adminisitrator',
+        );
+      }
 
       const token = this.jwtService.sign(
         { id: user._id, email, role: user.role },

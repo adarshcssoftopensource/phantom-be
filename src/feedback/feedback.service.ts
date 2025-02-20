@@ -33,10 +33,13 @@ export class FeedbackService {
     }
   }
 
-  async getAllFeedback(userId: string): Promise<Feedback[]> {
+  async getFeedbackById(id: string): Promise<Feedback[]> {
     try {
+      if (!isValidObjectId(id)) {
+        throw new BadRequestException('Invalid user ID');
+      }
       return await this.feedbackModel
-        .find({ userId })
+        .find({ userId: id })
         .sort({ createdAt: -1 })
         .lean()
         .exec();
@@ -46,19 +49,40 @@ export class FeedbackService {
     }
   }
 
-  async getFeedbackById(id: string): Promise<Feedback> {
-    if (!isValidObjectId(id)) {
-      throw new BadRequestException('Invalid feedback ID');
-    }
-
+  async getAllFeedbacks(
+    page?: number,
+    limit?: number,
+  ): Promise<{
+    data: CreateFeedbackDto[];
+    total: number;
+    page?: number;
+    limit?: number;
+  }> {
     try {
-      const feedback = await this.feedbackModel.findById(id).lean().exec();
-      if (!feedback) {
+      const pageNum = page && !isNaN(page) ? page : 1;
+      const limitNum = limit && !isNaN(limit) ? limit : 10;
+
+      const skip = (pageNum - 1) * limitNum;
+
+      const total = await this.feedbackModel.countDocuments();
+
+      const feedbacks = await this.feedbackModel
+        .find()
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+
+      if (!feedbacks) {
         throw new NotFoundException('Feedback not found');
       }
-      return feedback;
+      return {
+        data: plainToInstance(CreateFeedbackDto, feedbacks),
+        total,
+        page: pageNum,
+        limit: limitNum,
+      };
     } catch (error) {
-      this.logger.error(`Error retrieving feedback with ID ${id}`, error);
+      this.logger.error(`Error retrieving feedback`, error.message);
       throw new InternalServerErrorException('Failed to retrieve feedback');
     }
   }

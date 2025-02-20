@@ -4,6 +4,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { ContactsController } from './contact.controller';
 import { ContactsService } from './contact.service';
 import { Contact, ContactSchema } from './schema/contact.schema';
+import { User, UserSchema } from 'src/user/schema/user.model';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { Contact, ContactSchema } from './schema/contact.schema';
       dest: './upload',
     }),
     MongooseModule.forFeature([{ name: Contact.name, schema: ContactSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [ContactsController],
   providers: [ContactsService],

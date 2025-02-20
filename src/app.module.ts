@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { JwtStrategy } from '@common/strategies/jwt.strategy';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { FeedbackModule } from './feedback/feedback.module';
+import { PermissionsGuard } from '@common/guards/permission.guard';
 
 @Module({
   imports: [
@@ -54,6 +55,10 @@ import { FeedbackModule } from './feedback/feedback.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
   ],
 })

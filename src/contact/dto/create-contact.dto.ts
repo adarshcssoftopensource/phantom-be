@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsString, IsArray } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsArray,
+  IsPhoneNumber,
+} from 'class-validator';
 
 export class CreateContactDto {
   @IsNotEmpty()
@@ -10,7 +16,7 @@ export class CreateContactDto {
   lastName: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsPhoneNumber(undefined, { message: 'Invalid phone number format' })
   phoneNumber: string;
 
   @IsNotEmpty()

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { FeedbackService } from './feedback.service';
 import { Feedback } from './schema/feedback.schema';
@@ -17,9 +26,21 @@ export class FeedbackController {
     return this.feedbackService.createFeedback(userId, createFeedbackDto);
   }
 
-  @Get(':id')
-  async getAllFeedback(@Param('id') userId: string): Promise<Feedback[]> {
-    return this.feedbackService.getAllFeedback(userId);
+  @Get()
+  async getFeedbacks(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.feedbackService.getAllFeedbacks(
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    );
+  }
+
+  @Get('/per-user')
+  async getFeedback(@Req() req): Promise<Feedback[]> {
+    const userId = req.user.id;
+    return this.feedbackService.getFeedbackById(userId);
   }
 
   @Put(':id')
@@ -29,9 +50,4 @@ export class FeedbackController {
   ) {
     return await this.feedbackService.updateFeedback(id, dto);
   }
-
-  // @Get(':id')
-  // async getFeedbackById(@Param('id') id: string): Promise<Feedback> {
-  //   return this.feedbackService.getFeedbackById(id);
-  // }
 }

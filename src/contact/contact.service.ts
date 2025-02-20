@@ -35,6 +35,9 @@ export class ContactsService {
     page?: number,
     limit?: number,
     all?: boolean,
+    search?: string,
+    sortField?: string,
+    sortOrder?: 'asc' | 'desc',
   ): Promise<{
     data: CreateContactDto[];
     total: number;
@@ -56,10 +59,26 @@ export class ContactsService {
       const limitNum = limit && !isNaN(limit) ? limit : 10;
 
       const skip = (pageNum - 1) * limitNum;
-      const total = await this.contactModel.countDocuments();
+
+      const filter: any = {};
+      if (search) {
+        filter.$or = [
+          { firstName: new RegExp(search, 'i') },
+          { lastName: new RegExp(search, 'i') },
+          { email: new RegExp(search, 'i') },
+          { phoneNumber: new RegExp(search, 'i') },
+        ];
+      }
+
+      const sort: any = {};
+      if (sortField) {
+        sort[sortField] = sortOrder === 'desc' ? -1 : 1;
+      }
+      const total = await this.contactModel.countDocuments(filter);
 
       const contacts = await this.contactModel
-        .find()
+        .find(filter)
+        .sort(sort)
         .skip(skip)
         .limit(limitNum)
         .lean();
@@ -77,7 +96,6 @@ export class ContactsService {
       );
     }
   }
-
   async getContactById(id: string) {
     if (!id) {
       throw new Error('Contact ID is required.');

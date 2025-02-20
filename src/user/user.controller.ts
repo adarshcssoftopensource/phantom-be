@@ -8,12 +8,12 @@ import {
   Body,
   Delete,
   Query,
+  Post,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ResponseMessage } from '@common/decorators/response.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from '@common/decorators/roles.decorator';
-import { ROLE } from './user.role.enum';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -33,9 +33,29 @@ export class UserController {
     );
   }
 
+  @HttpCode(200)
+  @Get('sub-users')
+  async getSubUsers(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.userService.getAllSubUsers(
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+      search,
+    );
+  }
+
   @Get('user/:id')
   async getById(@Param('id') userId: string) {
     return this.userService.getUserById(userId);
+  }
+
+  @HttpCode(201)
+  @Post('sub-user')
+  async addUser(@Body() createUserDto: CreateUserDto) {
+    return this.userService.createUser(createUserDto);
   }
 
   @ResponseMessage('User updated successfully')
@@ -56,7 +76,6 @@ export class UserController {
   }
 
   @Get('profile')
-  @Roles([ROLE.Admin, ROLE.Developer])
   getProfile(@Req() req) {
     return this.userService.profile(req.user.id);
   }

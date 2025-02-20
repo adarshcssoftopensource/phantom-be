@@ -15,6 +15,13 @@ export enum ACCOUNT_TYPE {
   BUSINESS = 'business',
 }
 
+export enum PERMISSION_LEVEL {
+  READ_ONLY = 'read-only',
+  EDITOR = 'editor',
+  MANAGER = 'manager',
+  USER = 'user',
+}
+
 export class CreateAuthDto {
   @IsNotEmpty({ message: 'Name is required' })
   name: string;
@@ -36,6 +43,10 @@ export class CreateAuthDto {
   accountType: ACCOUNT_TYPE;
 
   @IsOptional()
+  @IsEnum(PERMISSION_LEVEL)
+  permissionLevel: PERMISSION_LEVEL;
+
+  @IsOptional()
   @IsString({ message: 'Business name must be a string' })
   businessName?: string;
 
@@ -46,6 +57,14 @@ export class CreateAuthDto {
   @IsOptional()
   @IsNumber()
   role: number;
+
+  @IsNotEmpty({ message: 'Consent is required' })
+  @IsBoolean()
+  consent: boolean;
+
+  @IsNotEmpty({ message: 'Terms agreement is required' })
+  @IsBoolean()
+  termsAgreement: boolean;
 }
 
 export class CreateLoginDto extends PickType(CreateAuthDto, [

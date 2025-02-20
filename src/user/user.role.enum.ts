@@ -3,4 +3,5 @@ export enum ROLE {
   Marketer,
   Finance,
   Developer,
+  User,
 }
