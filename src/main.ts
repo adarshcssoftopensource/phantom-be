@@ -7,7 +7,8 @@ import * as express from 'express';
 import { ExpressAdapter } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(), {
+  const server = express();
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
     rawBody: true,
     bodyParser: true,
     cors: true,
