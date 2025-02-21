@@ -11,8 +11,10 @@ import { User, UserSchema } from 'src/user/schema/user.model';
   imports: [
     ConfigModule,
     MailerModule,
-    MongooseModule.forFeature([{ name: OTP.name, schema: OTPSchema }]),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: OTP.name, schema: OTPSchema },
+    ]),
   ],
   controllers: [OtpController],
   providers: [OtpService],

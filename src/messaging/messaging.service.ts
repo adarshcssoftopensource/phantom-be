@@ -48,34 +48,31 @@ export class MessagingService {
         .lean()
         .exec();
 
-      const recevier = await this.contactModel
+      const receiver = await this.contactModel
         .findOne({ _id: new Types.ObjectId(to) })
         .lean()
         .exec();
 
       if (!sender) throw new BadRequestException('Sender not found');
-
-      if (!recevier) throw new BadRequestException('Receiver not found');
-      console.log(recevier.phoneNumber);
+      if (!receiver) throw new BadRequestException('Receiver not found');
+      if (sender.credits < 2)
+        throw new BadRequestException('Insufficient credits');
 
       const response = await this.send({
-        to: recevier.phoneNumber,
+        to: receiver.phoneNumber,
         message,
       });
 
-      // const response = await this.telnyxClient.messages.create({
-      //   from: this.fromNumber,
-      //   to: recevier.phoneNumber,
-      //   subject: title,
-      //   text: message,
-      //   use_profile_webhooks: false,
-      //   auto_detect: true,
-      //   messaging_profile_id: this.messaging_profile_id,
-      // });
+      // Deduct 2 credits from sender's balance
+      await this.userModel.updateOne(
+        { _id: sender._id },
+        { $inc: { credits: -2, creditsUsed: 2 } },
+      );
 
+      // Save the message to the database
       const newMessage = new this.messageModel({
         sender: sender._id,
-        receiver: recevier._id,
+        receiver: receiver._id,
         content: message,
       });
 
@@ -101,13 +98,20 @@ export class MessagingService {
     const results: any[] = [];
     const messagesToSave: any[] = [];
 
+    const sender = await this.userModel.findById(userId).lean().exec();
+    if (!sender) throw new BadRequestException('Sender not found');
+
+    const totalCost = numbers.length * 2;
+    if (sender.credits < totalCost)
+      throw new BadRequestException('Insufficient credits');
+
     for (const number of numbers) {
       try {
         const response = await this.send({ to: number, message });
 
         // Save message only if successfully sent
         const newMessage = new this.messageModel({
-          sender: userId, // No specific sender, so setting it as null
+          sender: userId,
           receiver: number,
           content: message,
         });
@@ -119,8 +123,12 @@ export class MessagingService {
       }
     }
 
-    // Save all messages in a single database operation
+    // Deduct credits only if messages were sent
     if (messagesToSave.length > 0) {
+      await this.userModel.updateOne(
+        { _id: userId },
+        { $inc: { credits: -totalCost, creditsUsed: totalCost } },
+      );
       await this.messageModel.insertMany(messagesToSave);
     }
 
@@ -138,11 +146,9 @@ export class MessagingService {
         messaging_profile_id: this.messaging_profile_id,
       });
 
-      console.log(response);
-
       return response;
     } catch (error) {
-      console.error('Telnyx SMS Error:', error.message);
+      console.error('Telnyx SMS Error:', error);
       throw new InternalServerErrorException(error.message);
     }
   }

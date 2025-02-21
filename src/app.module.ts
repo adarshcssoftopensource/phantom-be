@@ -17,6 +17,7 @@ import { JwtStrategy } from '@common/strategies/jwt.strategy';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { FeedbackModule } from './feedback/feedback.module';
 import { PermissionsGuard } from '@common/guards/permission.guard';
+import { PlansModule } from './plans/plans.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PermissionsGuard } from '@common/guards/permission.guard';
     }),
     OverviewModule,
     FeedbackModule,
+    PlansModule,
   ],
   controllers: [AppController],
   providers: [

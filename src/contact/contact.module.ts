@@ -11,8 +11,10 @@ import { User, UserSchema } from 'src/user/schema/user.model';
     MulterModule.register({
       dest: './upload',
     }),
-    MongooseModule.forFeature([{ name: Contact.name, schema: ContactSchema }]),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: Contact.name, schema: ContactSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
   ],
   controllers: [ContactsController],
   providers: [ContactsService],

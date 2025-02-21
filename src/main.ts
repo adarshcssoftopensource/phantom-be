@@ -3,11 +3,16 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ValidationExceptionFilter } from '@common/filters/validation-exception.filter';
 import { ResponseInterceptor } from '@common/interceptors/response-message.interceptor';
+import { raw } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+    bodyParser: true,
+  });
   app.useGlobalInterceptors(new ResponseInterceptor(new Reflector()));
   app.enableCors();
+  app.use('/plans/webhook', raw({ type: '*/*' }));
 
   app.useGlobalPipes(
     new ValidationPipe({

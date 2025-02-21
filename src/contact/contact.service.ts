@@ -75,7 +75,10 @@ export class ContactsService {
       if (sortField) {
         sort[sortField] = sortOrder === 'desc' ? -1 : 1;
       }
-      const total = await this.contactModel.countDocuments(filter);
+      const total = await this.contactModel.countDocuments({
+        ...filter,
+        userId,
+      });
 
       const contacts = await this.contactModel
         .find({ ...filter, userId })

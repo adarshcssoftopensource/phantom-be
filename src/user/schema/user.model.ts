@@ -50,6 +50,15 @@ export class User {
 
   @Prop({ required: true })
   termsAgreement: boolean;
+
+  @Prop({ default: 50 })
+  credits: number;
+
+  @Prop({ default: 0 })
+  creditsUsed: number;
+
+  @Prop({ default: 'no-plan' })
+  plan: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
