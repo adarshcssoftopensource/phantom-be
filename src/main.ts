@@ -4,11 +4,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { ValidationExceptionFilter } from '@common/filters/validation-exception.filter';
 import { ResponseInterceptor } from '@common/interceptors/response-message.interceptor';
 import * as express from 'express';
-import { ExpressAdapter } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const server = express();
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
+  const app = await NestFactory.create(AppModule, {
     rawBody: true,
     bodyParser: true,
     cors: true,
