@@ -4,12 +4,24 @@ import { OtpController } from './otp.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OTP, OTPSchema } from './schema/otp.schema';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User, UserSchema } from 'src/user/schema/user.model';
+import { MailgunModule } from 'nestjs-mailgun';
+import { MailgunProvider } from '@common/services/email-service';
 
 @Module({
   imports: [
     ConfigModule,
+    MailgunModule.forAsyncRoot({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          username: 'api',
+          key: configService.get<string>('MAILGUN_API_KEY') ?? '',
+        };
+      },
+    }),
     MailerModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
@@ -17,6 +29,6 @@ import { User, UserSchema } from 'src/user/schema/user.model';
     ]),
   ],
   controllers: [OtpController],
-  providers: [OtpService],
+  providers: [OtpService, MailgunProvider],
 })
 export class OtpModule {}

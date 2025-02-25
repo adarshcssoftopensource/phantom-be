@@ -7,18 +7,22 @@ import { MailerService } from '@nestjs-modules/mailer';
 import Telnyx from 'telnyx';
 import { ConfigService } from '@nestjs/config';
 import { User, UserDocument } from 'src/user/schema/user.model';
+import { MailgunMessageData, MailgunService } from 'nestjs-mailgun';
 
 @Injectable()
 export class OtpService {
   private telnyxClient: Telnyx;
+  private mailGunDomain: string;
 
   constructor(
     @InjectModel(OTP.name) private otpModel: Model<OTP>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly mailService: MailerService,
+    private readonly mailgunService: MailgunService,
     private configService: ConfigService,
   ) {
     this.telnyxClient = new Telnyx(this.configService.get('TELNYX_API_KEY')!);
+    this.mailGunDomain = this.configService.get<string>('MAILGUN_DOMAIN')!;
   }
 
   // ✅ Send OTP (Handles Both Email & Phone)
@@ -106,8 +110,8 @@ export class OtpService {
 
   // ✅ Send Email OTP
   private async sendEmailOtp(email: string, otp: string) {
-    const mailOptions = {
-      from: `"Your App Name" <${process.env.EMAIL_USER}>`,
+    const mailOptions: MailgunMessageData = {
+      from: `Mailgun Sandbox <${this.configService.get<string>('EMAIL_USER')!}>`,
       to: email,
       subject: 'Your OTP Code',
       text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,

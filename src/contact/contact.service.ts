@@ -7,9 +7,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { Contact, ContactDocument } from './schema/contact.schema';
-import { parseCsvFile } from 'src/utils/csv-parser';
+// import { parseCsvFile } from 'src/utils/csv-parser';
 import { plainToInstance } from 'class-transformer';
 import { UpdateContactDto } from './dto/update-contact.dto';
+import { parseCsvFile } from 'src/utils/csv-parser';
 
 @Injectable()
 export class ContactsService {

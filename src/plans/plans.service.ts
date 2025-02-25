@@ -70,39 +70,7 @@ export class PlansService {
     planId: string,
     userEmail: string,
   ): Promise<Stripe.Checkout.Session> {
-    const plans = [
-      {
-        id: '1',
-        name: 'Starter',
-        credits: 100,
-        price: 10,
-        features: [
-          '100 Credits',
-          'Basic Support',
-          'Access to Core Features',
-          '24/7 Customer Service',
-        ],
-        popular: false,
-      },
-      {
-        id: '2',
-        name: 'Pro',
-        credits: 500,
-        price: 29,
-        features: ['500  Credits', 'Basic Support', '24/7 Customer Service'],
-        popular: true,
-      },
-      {
-        id: '3',
-        name: 'Enterprise',
-        credits: 2000,
-        price: 99,
-        features: ['2000  Credits', 'Dedicated Support', 'Custom Solutions'],
-        popular: false,
-      },
-    ];
-
-    const plan = plans.find((p) => p.id === planId);
+    const plan = await this.planModel.findById(planId).exec();
 
     if (!plan) throw new Error('Invalid plan ID');
 
@@ -170,7 +138,7 @@ export class PlansService {
         { status: 'failed', errorMessage: 'Session expired' },
       );
     } else if (event.type === 'payment_intent.payment_failed') {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const paymentIntent = event.data.object;
       await this.paymentModel.updateOne(
         { sessionId: session.id },
         {

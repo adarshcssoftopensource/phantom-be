@@ -1,4 +1,10 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class BulkMessagingDto {
   @IsArray()
@@ -8,4 +14,11 @@ export class BulkMessagingDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @IsNotEmpty()
+  @IsEnum(['SMS', 'MMS'])
+  messageType: string;
+
+  @IsOptional()
+  file?: string;
 }

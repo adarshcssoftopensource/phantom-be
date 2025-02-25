@@ -14,6 +14,9 @@ export class Message {
 
   @Prop({ type: String, required: true })
   content: string;
+
+  @Prop({ type: String })
+  file: string;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

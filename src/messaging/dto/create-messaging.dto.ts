@@ -1,4 +1,10 @@
-import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateMessagingDto {
   @IsNotEmpty()
@@ -8,4 +14,11 @@ export class CreateMessagingDto {
   @IsNotEmpty()
   @IsString()
   message: string; // SMS content
+
+  @IsNotEmpty()
+  @IsEnum(['SMS', 'MMS'])
+  messageType: string;
+
+  @IsOptional()
+  file?: string;
 }

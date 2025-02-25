@@ -1,7 +1,7 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { OtpService } from './otp.service';
 import { ResponseMessage } from '@common/decorators/response.decorator';
-import { Public } from '@common/decorators/public.decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('otp')
 @Public()

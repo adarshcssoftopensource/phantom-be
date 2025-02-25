@@ -59,6 +59,9 @@ export class User {
 
   @Prop({ default: 'no-plan' })
   plan: string;
+
+  @Prop()
+  assignedNumber: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

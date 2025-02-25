@@ -18,9 +18,22 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { FeedbackModule } from './feedback/feedback.module';
 import { PermissionsGuard } from '@common/guards/permission.guard';
 import { PlansModule } from './plans/plans.module';
+import { TelnyxModule } from './telnyx/telnyx.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot(
+      {
+        rootPath: join(__dirname, '..', 'upload'),
+        serveRoot: '/upload',
+      },
+      {
+        rootPath: join(__dirname, '..', 'mms'),
+        serveRoot: '/mms',
+      },
+    ),
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGO_URL_PROD!),
     AuthModule,
@@ -45,6 +58,7 @@ import { PlansModule } from './plans/plans.module';
     OverviewModule,
     FeedbackModule,
     PlansModule,
+    TelnyxModule,
   ],
   controllers: [AppController],
   providers: [

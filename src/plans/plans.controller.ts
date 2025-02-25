@@ -13,7 +13,7 @@ import { Request } from 'express';
 import Stripe from 'stripe';
 import { PlansService } from './plans.service';
 import { ConfigService } from '@nestjs/config';
-import { Public } from '@common/decorators/public.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { Plan } from './schema/plan.schema';
 import { UpdatePlanDto } from './dto/update-plan.dto';

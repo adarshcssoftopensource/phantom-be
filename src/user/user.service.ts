@@ -221,6 +221,7 @@ export class UserService {
         permissionLevel,
         businessName,
         accountType,
+        assignedNumber,
       } = updateAuthDto;
 
       // Check if the user exists
@@ -243,6 +244,7 @@ export class UserService {
       if (permissionLevel) updateFields.permissionLevel = permissionLevel;
       if (accountType) updateFields.accountType = accountType;
       if (businessName) updateFields.businessName = businessName;
+      if (assignedNumber) updateFields.assignedNumber = assignedNumber;
       if (status !== undefined) updateFields.status = status;
       if (role !== undefined) updateFields.role = role;
       if (password) {

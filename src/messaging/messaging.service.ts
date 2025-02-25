@@ -36,11 +36,13 @@ export class MessagingService {
   async sendMessage({
     messageDto,
     userId,
+    file,
   }: {
     messageDto: CreateMessagingDto;
     userId: string;
+    file: Express.Multer.File | null;
   }) {
-    const { to, message } = messageDto;
+    const { to, message, messageType } = messageDto;
 
     try {
       const sender = await this.userModel
@@ -55,18 +57,21 @@ export class MessagingService {
 
       if (!sender) throw new BadRequestException('Sender not found');
       if (!receiver) throw new BadRequestException('Receiver not found');
-      if (sender.credits < 2)
+      if (sender.credits < (messageType === 'SMS' ? 1 : 3))
         throw new BadRequestException('Insufficient credits');
 
       const response = await this.send({
         to: receiver.phoneNumber,
         message,
+        messageType,
+        file,
       });
 
-      // Deduct 2 credits from sender's balance
+      // Deduct credits from sender's balance
+      const creditDeduction = messageType === 'SMS' ? 1 : 3;
       await this.userModel.updateOne(
         { _id: sender._id },
-        { $inc: { credits: -2, creditsUsed: 2 } },
+        { $inc: { credits: -creditDeduction, creditsUsed: creditDeduction } },
       );
 
       // Save the message to the database
@@ -90,11 +95,13 @@ export class MessagingService {
   async sendCampaign({
     bulkMessageDto,
     userId,
+    file,
   }: {
     bulkMessageDto: BulkMessagingDto;
     userId: string;
+    file: Express.Multer.File | null;
   }) {
-    const { numbers, message } = bulkMessageDto;
+    const { numbers, message, messageType } = bulkMessageDto;
     const results: any[] = [];
     const messagesToSave: any[] = [];
 
@@ -107,7 +114,12 @@ export class MessagingService {
 
     for (const number of numbers) {
       try {
-        const response = await this.send({ to: number, message });
+        const response = await this.send({
+          to: number,
+          message,
+          messageType,
+          file,
+        });
 
         // Save message only if successfully sent
         const newMessage = new this.messageModel({
@@ -135,21 +147,47 @@ export class MessagingService {
     return { message: 'Bulk messages processed', results };
   }
 
-  private async send({ to, message }) {
+  private async send({
+    to,
+    message,
+    messageType,
+    file = null,
+  }: {
+    to: string;
+    message: string;
+    messageType: string;
+    file?: Express.Multer.File | null;
+  }) {
     try {
-      const response = await this.telnyxClient.messages.create({
+      const messageOptions: any = {
         from: this.fromNumber,
         to,
         text: message,
+        type: messageType,
         use_profile_webhooks: false,
         auto_detect: true,
         messaging_profile_id: this.messaging_profile_id,
-      });
+      };
 
+      // Include file (media_urls) only if messageType is MMS and file is provided
+      if (messageType === 'MMS' && file) {
+        const fileUrl = await this.uploadFile(file);
+        messageOptions.media_urls = [fileUrl];
+        console.log('fileUrl:', fileUrl);
+      }
+      const response = await this.telnyxClient.messages.create(messageOptions);
       return response;
     } catch (error) {
-      console.error('Telnyx SMS Error:', error);
-      throw new InternalServerErrorException(error.message);
+      console.error('Telnyx SMS Error:', error.raw);
+      throw new InternalServerErrorException(error.raw.detail);
+    }
+  }
+  uploadFile(file: Express.Multer.File): Promise<string> {
+    try {
+      return Promise.resolve(`http://localhost:8080/mms/${file.filename}`);
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw new InternalServerErrorException('Error uploading file');
     }
   }
 }

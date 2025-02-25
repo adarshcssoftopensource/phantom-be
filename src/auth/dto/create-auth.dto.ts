@@ -65,6 +65,10 @@ export class CreateAuthDto {
   @IsNotEmpty({ message: 'Terms agreement is required' })
   @IsBoolean()
   termsAgreement: boolean;
+
+  @IsOptional()
+  @IsString()
+  assignedNumber: string;
 }
 
 export class CreateLoginDto extends PickType(CreateAuthDto, [
