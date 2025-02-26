@@ -16,7 +16,6 @@
       "@filters/*": ["src/common/decorators/*"],
       "@guards/*": ["src/common/decorators/*"],
       "@interceptors/*": ["src/common/decorators/*"],
-    
     },
     "incremental": true,
     "skipLibCheck": true,
